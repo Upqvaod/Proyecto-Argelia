@@ -36,9 +36,9 @@ env.build("(deftemplate riesgo (slot factor) (slot nivel))")
 # Definir reglas de forma individual
 env.build("""
 (defrule detectar_covid
-   (sintoma (nombre fiebre_alta))
-   (sintoma (nombre tos_seca))
-   (sintoma (nombre dificultad_para_respirar))
+   (sintoma (nombre fiebre))
+   (sintoma (nombre tos))
+   (sintoma (nombre dificultad))
    =>
    (assert (diagnostico (enfermedad "COVID19") (certeza 90) (recomendacion "Aislamiento, prueba PCR y monitoreo medico"))))
 """)
@@ -120,7 +120,7 @@ def backward_chaining(enfermedad_objetivo):
     """
     # Obtener reglas que concluyen la enfermedad objetivo
     requisitos_sintomas = {
-        "COVID19": ["fiebre_alta", "tos_seca", "dificultad_para_respirar"],
+        "COVID19": ["fiebre", "tos", "dificultad_para_respirar"],
         "Gripe": ["fiebre", "dolor_muscular", "congestion_nasal"],
         "Riesgo_alto_enfermedades_respiratorias": []  # Este depende de factores de riesgo, no síntomas
     }
@@ -195,6 +195,7 @@ def diagnosticar_completo(texto, edad, historial, enfermedad_objetivo=None):
     # Recopilar diagnósticos generados
     diagnosticos = []
     for fact in env.facts():
+        print(fact)
         if fact.template.name == "diagnostico":
             diagnosticos.append({
                 "enfermedad": fact["enfermedad"], 
@@ -202,7 +203,6 @@ def diagnosticar_completo(texto, edad, historial, enfermedad_objetivo=None):
                 "recomendacion": fact["recomendacion"],
                 "explicacion": explicar_diagnostico(fact["enfermedad"])
             })
-    
     return diagnosticos
 
 #################################################
