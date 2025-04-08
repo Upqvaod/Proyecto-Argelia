@@ -1,6 +1,6 @@
-import clips
-import spacy
-import re 
+import clips # Esta bibilioteca es para el motor de inferencia CLIPS
+import spacy # Esta biblioteca es para el procesamiento de lenguaje natural
+import re  # Esta biblioteca es para expresiones regulares 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 from collections import defaultdict
@@ -342,11 +342,11 @@ class DiagnosticoApp:
         
         # Título
         ttk.Label(main_frame, text="Sistema Experto de Diagnóstico Médico", 
-                  font=("Helvetica", 16, "bold")).pack(pady=10)
+                  font=("Helvetica", 16, "bold")).pack(pady=0)
         
         # Frame para entrada de datos
         input_frame = ttk.LabelFrame(main_frame, text="Datos del Paciente", padding="10")
-        input_frame.pack(fill=tk.X, pady=5)
+        input_frame.pack(fill=tk.X, pady=2)
         
         # Descripción de síntomas
         ttk.Label(input_frame, text="Describa sus síntomas:").grid(row=0, column=0, sticky=tk.W, pady=5)
@@ -381,7 +381,7 @@ class DiagnosticoApp:
         
         # Análisis específico
         enferm_frame = ttk.LabelFrame(main_frame, text="Análisis Específico", padding="10")
-        enferm_frame.pack(fill=tk.X, pady=5)
+        enferm_frame.pack(fill=tk.X, pady=1)
         
         self.enfermedad_var = tk.StringVar(value="ninguna")
         enfermedades = {
@@ -407,8 +407,8 @@ class DiagnosticoApp:
         result_frame = ttk.LabelFrame(main_frame, text="Resultados del Diagnóstico", padding="10")
         result_frame.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        self.resultado_text = scrolledtext.ScrolledText(result_frame, height=10, wrap=tk.WORD)
-        self.resultado_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.resultado_text = scrolledtext.ScrolledText(result_frame, height=20, wrap=tk.WORD)
+        self.resultado_text.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
     
     def limpiar_campos(self):
         """Limpia todos los campos del formulario"""
