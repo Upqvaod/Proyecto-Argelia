@@ -38,11 +38,8 @@ sinonimos_sintomas = {
     "dolor articular": ["artralgia", "dolor en las articulaciones", "rigidez articular"],
     "glándulas inflamadas": ["ganglios inflamados", "adenopatía", "inflamación ganglionar"],
     "escalofríos": ["tiritona", "temblores por frío", "estremecimiento"],
-    "sudoración": ["sudores", "transpiración excesiva", "hiperhidrosis"],
     "tos con flema": ["tos productiva", "tos con mucosidad", "expectoración"],
     "secreción nasal": ["goteo nasal", "rinorrea", "moco"],
-    "insomnio": ["dificultad para dormir", "desvelo", "falta de sueño"],
-    "pérdida de apetito": ["inapetencia", "anorexia", "falta de hambre"],
 }
 
 # Frases negativas que indican ausencia de síntomas
@@ -102,7 +99,7 @@ env.build("""
     (sintoma (nombre dolor_de_garganta))
     (not (sintoma (nombre fiebre_alta)))
     =>
-    (assert (diagnostico (enfermedad "Resfriado_Comun") (certeza 70) (recomendacion "Descanso, hidratacion y remedios sintomaticos"))))
+    (assert (diagnostico (enfermedad "Resfriado_Comun") (certeza 70) (recomendacion "Descanso, hidratacion y remedios sintomaticos, uso de medicame"))))
 """)
 
 env.build("""
@@ -347,6 +344,10 @@ if __name__ == "__main__":
         print("1. Asma")
         print("2. Diabetes")
         print("3. Hipertensión")
+        print("4. Obesidad")
+        print("5. Enfermedad cardíaca")
+        print("6. Enfermedad respiratoria crónica")
+        print("0. Ninguna")
         
         historial = []
         seleccion = input("Selección: ")
@@ -356,11 +357,22 @@ if __name__ == "__main__":
             historial.append("diabetes")
         if "3" in seleccion:
             historial.append("hipertension")
+        if "4" in seleccion:
+            historial.append("obesidad")
+        if "5" in seleccion:
+            historial.append("enfermedad_cardiaca")
+        if "6" in seleccion:
+            historial.append("enfermedad_respiratoria_cronica")
+        if "0" in seleccion:
+            print("No se seleccionó ninguna condición preexistente.")
+        
+        
         
         print("\nEnfermedades disponibles para análisis específico:")
         print("1. COVID19")
         print("2. Gripe")
         print("3. Riesgo alto enfermedades respiratorias")
+        print("4. Neumonía")
         print("0. Ninguna (análisis general)")
         
         enfermedad_objetivo = None
