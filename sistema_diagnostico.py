@@ -1,6 +1,8 @@
 import clips
 import spacy
-import re
+import re 
+import tkinter as tk
+from tkinter import ttk, scrolledtext, messagebox
 from collections import defaultdict
 
 ###########################################
@@ -312,6 +314,7 @@ def diagnosticar_completo(texto, edad, historial, enfermedad_objetivo=None):
     # Recopilar diagnósticos generados
     diagnosticos = []
     for fact in env.facts():
+        print (fact)
         if fact.template.name == "diagnostico":
             diagnosticos.append({
                 "enfermedad": fact["enfermedad"], 
@@ -323,80 +326,156 @@ def diagnosticar_completo(texto, edad, historial, enfermedad_objetivo=None):
     return diagnosticos
 
 #################################################
+# PARTE 3: INTERFAZ GRÁFICA CON TKINTER
+#################################################
+
+class DiagnosticoApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Sistema Experto de Diagnóstico Médico")
+        self.root.geometry("800x700")
+        self.root.configure(bg="#f0f0f0")
+        
+        # Crear contenedor principal
+        main_frame = ttk.Frame(root, padding="10")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Título
+        ttk.Label(main_frame, text="Sistema Experto de Diagnóstico Médico", 
+                  font=("Helvetica", 16, "bold")).pack(pady=10)
+        
+        # Frame para entrada de datos
+        input_frame = ttk.LabelFrame(main_frame, text="Datos del Paciente", padding="10")
+        input_frame.pack(fill=tk.X, pady=5)
+        
+        # Descripción de síntomas
+        ttk.Label(input_frame, text="Describa sus síntomas:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.sintomas_text = scrolledtext.ScrolledText(input_frame, height=5, width=70, wrap=tk.WORD)
+        self.sintomas_text.grid(row=1, column=0, columnspan=2, pady=5, padx=5, sticky=tk.W+tk.E)
+        
+        # Edad
+        ttk.Label(input_frame, text="Edad:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.edad_var = tk.StringVar(value="30")
+        edad_spinbox = ttk.Spinbox(input_frame, from_=0, to=120, textvariable=self.edad_var, width=5)
+        edad_spinbox.grid(row=2, column=1, sticky=tk.W, pady=5)
+        
+        # Condiciones preexistentes
+        cond_frame = ttk.LabelFrame(main_frame, text="Condiciones Preexistentes", padding="10")
+        cond_frame.pack(fill=tk.X, pady=5)
+        
+        self.cond_vars = {
+            "asma": tk.BooleanVar(),
+            "diabetes": tk.BooleanVar(),
+            "hipertension": tk.BooleanVar(),
+            "obesidad": tk.BooleanVar(),
+            "enfermedad_cardiaca": tk.BooleanVar(),
+            "enfermedad_respiratoria_cronica": tk.BooleanVar()
+        }
+        
+        # Crear checkboxes para condiciones
+        for i, (cond, var) in enumerate(self.cond_vars.items()):
+            row = i // 3
+            col = i % 3
+            ttk.Checkbutton(cond_frame, text=cond.replace("_", " ").title(), 
+                           variable=var).grid(row=row, column=col, sticky=tk.W, padx=10, pady=5)
+        
+        # Análisis específico
+        enferm_frame = ttk.LabelFrame(main_frame, text="Análisis Específico", padding="10")
+        enferm_frame.pack(fill=tk.X, pady=5)
+        
+        self.enfermedad_var = tk.StringVar(value="ninguna")
+        enfermedades = {
+            "ninguna": "Análisis general",
+            "COVID19": "COVID-19",
+            "Gripe": "Gripe",
+            "Neumonia": "Neumonía",
+            "Riesgo_alto_enfermedades_respiratorias": "Riesgo alto enfermedades respiratorias"
+        }
+        
+        for i, (val, text) in enumerate(enfermedades.items()):
+            ttk.Radiobutton(enferm_frame, text=text, value=val, 
+                           variable=self.enfermedad_var).grid(row=i//2, column=i%2, sticky=tk.W, padx=10, pady=5)
+        
+        # Botones de acción
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(fill=tk.X, pady=10)
+        
+        ttk.Button(btn_frame, text="Diagnosticar", command=self.realizar_diagnostico).pack(side=tk.LEFT, padx=10)
+        ttk.Button(btn_frame, text="Limpiar", command=self.limpiar_campos).pack(side=tk.LEFT, padx=10)
+        
+        # Área de resultados
+        result_frame = ttk.LabelFrame(main_frame, text="Resultados del Diagnóstico", padding="10")
+        result_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        
+        self.resultado_text = scrolledtext.ScrolledText(result_frame, height=10, wrap=tk.WORD)
+        self.resultado_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+    
+    def limpiar_campos(self):
+        """Limpia todos los campos del formulario"""
+        self.sintomas_text.delete("1.0", tk.END)
+        self.edad_var.set("30")
+        for var in self.cond_vars.values():
+            var.set(False)
+        self.enfermedad_var.set("ninguna")
+        self.resultado_text.delete("1.0", tk.END)
+    
+    def realizar_diagnostico(self):
+        """Realiza el diagnóstico con los datos ingresados"""
+        try:
+            # Obtener datos del formulario
+            descripcion = self.sintomas_text.get("1.0", tk.END).strip()
+            if not descripcion:
+                messagebox.showwarning("Datos incompletos", "Por favor describa sus síntomas")
+                return
+            
+            try:
+                edad = int(self.edad_var.get())
+            except ValueError:
+                messagebox.showwarning("Valor inválido", "La edad debe ser un número entero")
+                return
+            
+            historial = [cond for cond, var in self.cond_vars.items() if var.get()]
+            
+            enfermedad_objetivo = self.enfermedad_var.get()
+            if enfermedad_objetivo == "ninguna":
+                enfermedad_objetivo = None
+            
+            # Realizar diagnóstico
+            self.resultado_text.delete("1.0", tk.END)
+            self.resultado_text.insert(tk.INSERT, "Procesando diagnóstico...\n\n")
+            self.root.update()
+            
+            # Detección de síntomas
+            sintomas = extraer_sintomas(descripcion)
+            self.resultado_text.insert(tk.INSERT, f"Síntomas detectados: {', '.join(sintomas)}\n\n")
+            
+            # Análisis
+            diagnosticos = diagnosticar_completo(descripcion, edad, historial, enfermedad_objetivo)
+            
+            # Mostrar resultados
+            if diagnosticos:
+                self.resultado_text.insert(tk.INSERT, "=== Diagnóstico completado ===\n\n")
+                for diag in diagnosticos:
+                    self.resultado_text.insert(tk.INSERT, f"• {diag['enfermedad']} (Certeza: {diag['certeza']}%)\n")
+                    self.resultado_text.insert(tk.INSERT, f"  Explicación: {diag['explicacion']}\n")
+                    self.resultado_text.insert(tk.INSERT, f"  Recomendación: {diag['recomendacion']}\n\n")
+            else:
+                self.resultado_text.insert(tk.INSERT, "No se pudo generar un diagnóstico con los síntomas proporcionados.\n")
+                self.resultado_text.insert(tk.INSERT, "Intente describir sus síntomas con mayor detalle.")
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error en el diagnóstico: {str(e)}")
+            self.resultado_text.insert(tk.INSERT, f"Error: {str(e)}")
+
+#################################################
 # PARTE 4: EJECUCIÓN PRINCIPAL 
 #################################################
 
 if __name__ == "__main__":
-    print("Sistema Experto de Diagnóstico Médico")
-    print("=====================================")
-    
     try:
-        # Recopilar información del usuario a través de la consola
-        descripcion = input("Describa sus síntomas: ")
-        
-        try:
-            edad = int(input("Introduzca su edad: "))
-        except ValueError:
-            print("Edad no válida. Se usará 30 por defecto.")
-            edad = 30
-        
-        print("\nSeleccione condiciones preexistentes (introduzca números separados por comas):")
-        print("1. Asma")
-        print("2. Diabetes")
-        print("3. Hipertensión")
-        print("4. Obesidad")
-        print("5. Enfermedad cardíaca")
-        print("6. Enfermedad respiratoria crónica")
-        print("0. Ninguna")
-        
-        historial = []
-        seleccion = input("Selección: ")
-        if "1" in seleccion:
-            historial.append("asma")
-        if "2" in seleccion:
-            historial.append("diabetes")
-        if "3" in seleccion:
-            historial.append("hipertension")
-        if "4" in seleccion:
-            historial.append("obesidad")
-        if "5" in seleccion:
-            historial.append("enfermedad_cardiaca")
-        if "6" in seleccion:
-            historial.append("enfermedad_respiratoria_cronica")
-        if "0" in seleccion:
-            print("No se seleccionó ninguna condición preexistente.")
-        
-        
-        
-        print("\nEnfermedades disponibles para análisis específico:")
-        print("1. COVID19")
-        print("2. Gripe")
-        print("3. Riesgo alto enfermedades respiratorias")
-        print("4. Neumonía")
-        print("0. Ninguna (análisis general)")
-        
-        enfermedad_objetivo = None
-        seleccion_enfermedad = input("Seleccione una enfermedad a verificar (0-3): ")
-        if seleccion_enfermedad == "1":
-            enfermedad_objetivo = "COVID19"
-        elif seleccion_enfermedad == "2":
-            enfermedad_objetivo = "Gripe"
-        elif seleccion_enfermedad == "3":
-            enfermedad_objetivo = "Riesgo_alto_enfermedades_respiratorias"
-        
-        # Realizar diagnóstico
-        diagnosticos = diagnosticar_completo(descripcion, edad, historial, enfermedad_objetivo)
-        
-        # Mostrar resultados
-        print("\n=== Diagnóstico completado ===")
-        if diagnosticos:
-            for diag in diagnosticos:
-                print(f"\n• {diag['enfermedad']} (Certeza: {diag['certeza']}%)")
-                print(f"  Explicación: {diag['explicacion']}")
-                print(f"  Recomendación: {diag['recomendacion']}")
-        else:
-            print("\nNo se pudo generar un diagnóstico con los síntomas proporcionados.")
-            print("Intente describir sus síntomas con mayor detalle.")
-            
+        # Iniciar la aplicación GUI
+        root = tk.Tk()
+        app = DiagnosticoApp(root)
+        root.mainloop()
     except Exception as e:
-        print(f"Error en el diagnóstico: {str(e)}")
+        print(f"Error al iniciar la aplicación: {str(e)}")
