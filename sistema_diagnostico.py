@@ -1,7 +1,7 @@
 import clips # Esta bibilioteca es para el motor de inferencia CLIPS
 import spacy # Esta biblioteca es para el procesamiento de lenguaje natural
 import re  # Esta biblioteca es para expresiones regulares 
-import tkinter as tk
+import tkinter as tk # Estas biblioteca es para la interfaz gráfica de usuario
 from tkinter import ttk, scrolledtext, messagebox
 from collections import defaultdict
 
@@ -20,7 +20,6 @@ sinonimos_sintomas = {
     "fiebre alta": ["temperatura elevada", "calentura", "pirexia", "hipertermia"],
     "fiebre": ["temperatura", "calentura"],
     "tos seca": ["tos persistente", "tos irritativa", "tos improductiva", "tos sin flema"],
-    "tos": ["toser", "toses"],
     "dolor de cabeza": ["cefalea", "migraña", "jaqueca", "dolor craneal"],
     "congestión nasal": ["nariz tapada", "obstrucción nasal", "rinorrea"],
     "dificultad para respirar": ["falta de aire", "disnea", "ahogo", "respiración dificultosa"],
@@ -55,71 +54,168 @@ env.build("(deftemplate historial (slot condicion))")
 env.build("(deftemplate diagnostico (slot enfermedad) (slot certeza) (slot recomendacion))")
 env.build("(deftemplate riesgo (slot factor) (slot nivel))")
 
-# Definir reglas de forma individual
+# Definir reglas mejoradas utilizando el conocimiento del diccionario de sinónimos
 env.build("""
 (defrule detectar_covid
-    (sintoma (nombre fiebre_alta))
-    (sintoma (nombre tos_seca))
-    (sintoma (nombre dificultad_para_respirar))
+    (or (sintoma (nombre fiebre_alta))
+        (sintoma (nombre temperatura_elevada))
+        (sintoma (nombre hipertermia)))
+    (or (sintoma (nombre tos_seca))
+        (sintoma (nombre tos_persistente))
+        (sintoma (nombre tos_improductiva)))
+    (or (sintoma (nombre dificultad_para_respirar))
+        (sintoma (nombre falta_de_aire))
+        (sintoma (nombre disnea)))
+    (or (sintoma (nombre perdida_de_olfato))
+        (sintoma (nombre anosmia))
+        (sintoma (nombre perdida_de_gusto))
+        (sintoma (nombre ageusia)))
     =>
-    (assert (diagnostico (enfermedad "COVID19") (certeza 90) (recomendacion "Aislamiento, prueba PCR y monitoreo medico"))))
+    (assert (diagnostico (enfermedad "COVID19") (certeza 95) (recomendacion "Aislamiento, prueba PCR y monitoreo médico inmediato"))))
+""")
+
+env.build("""
+(defrule detectar_covid_parcial
+    (or (sintoma (nombre fiebre_alta))
+        (sintoma (nombre temperatura_elevada))
+        (sintoma (nombre hipertermia)))
+    (or (sintoma (nombre tos_seca))
+        (sintoma (nombre tos_persistente))
+        (sintoma (nombre tos_improductiva)))
+    (or (sintoma (nombre dificultad_para_respirar))
+        (sintoma (nombre falta_de_aire))
+        (sintoma (nombre disnea)))
+    =>
+    (assert (diagnostico (enfermedad "COVID19") (certeza 85) (recomendacion "Aislamiento preventivo, prueba PCR y monitoreo de síntomas"))))
 """)
 
 env.build("""
 (defrule detectar_gripe
-    (sintoma (nombre fiebre))
-    (sintoma (nombre dolor_muscular))
-    (sintoma (nombre congestion_nasal))
+    (or (sintoma (nombre fiebre))
+        (sintoma (nombre temperatura))
+        (sintoma (nombre calentura)))
+    (or (sintoma (nombre dolor_muscular))
+        (sintoma (nombre mialgia))
+        (sintoma (nombre cuerpo_cortado)))
+    (or (sintoma (nombre congestion_nasal))
+        (sintoma (nombre nariz_tapada))
+        (sintoma (nombre estornudos)))
+    (or (sintoma (nombre dolor_de_cabeza))
+        (sintoma (nombre cefalea))
+        (sintoma (nombre escalofrios)))
     =>
-    (assert (diagnostico (enfermedad "Gripe") (certeza 80) (recomendacion "Reposo, hidratacion y analgesicos"))))
+    (assert (diagnostico (enfermedad "Gripe") (certeza 90) (recomendacion "Reposo, hidratación adecuada y analgésicos"))))
 """)
 
-# Nuevas reglas para enfermedades respiratorias
+env.build("""
+(defrule detectar_gripe_parcial
+    (or (sintoma (nombre fiebre))
+        (sintoma (nombre temperatura))
+        (sintoma (nombre calentura)))
+    (or (sintoma (nombre dolor_muscular))
+        (sintoma (nombre mialgia))
+        (sintoma (nombre cuerpo_cortado)))
+    (or (sintoma (nombre congestion_nasal))
+        (sintoma (nombre nariz_tapada))
+        (sintoma (nombre estornudos)))
+    =>
+    (assert (diagnostico (enfermedad "Gripe") (certeza 80) (recomendacion "Reposo, hidratación y analgésicos"))))
+""")
+
 env.build("""
 (defrule detectar_neumonia
-    (sintoma (nombre fiebre_alta))
-    (sintoma (nombre tos_con_flema))
-    (sintoma (nombre dolor_en_el_pecho))
-    (sintoma (nombre dificultad_para_respirar))
+    (or (sintoma (nombre fiebre_alta))
+        (sintoma (nombre temperatura_elevada))
+        (sintoma (nombre hipertermia)))
+    (or (sintoma (nombre tos_con_flema))
+        (sintoma (nombre tos_productiva))
+        (sintoma (nombre expectoracion)))
+    (or (sintoma (nombre dolor_en_el_pecho)) 
+        (sintoma (nombre dolor_toracico))
+        (sintoma (nombre presion_en_el_pecho)))
+    (or (sintoma (nombre dificultad_para_respirar))
+        (sintoma (nombre falta_de_aire))
+        (sintoma (nombre disnea)))
     =>
-    (assert (diagnostico (enfermedad "Neumonia") (certeza 85) (recomendacion "Consulta medica urgente, posibles antibioticos y radiografia de torax"))))
+    (assert (diagnostico (enfermedad "Neumonia") (certeza 90) (recomendacion "Consulta médica urgente, posibles antibióticos y radiografía de tórax"))))
 """)
 
 env.build("""
 (defrule detectar_bronquitis
-    (sintoma (nombre tos_con_flema))
-    (sintoma (nombre fatiga))
-    (sintoma (nombre fiebre))
+    (or (sintoma (nombre tos_con_flema))
+        (sintoma (nombre tos_productiva))
+        (sintoma (nombre expectoracion)))
+    (or (sintoma (nombre fatiga))
+        (sintoma (nombre cansancio))
+        (sintoma (nombre debilidad)))
+    (or (sintoma (nombre fiebre))
+        (sintoma (nombre temperatura))
+        (sintoma (nombre calentura)))
     =>
-    (assert (diagnostico (enfermedad "Bronquitis") (certeza 75) (recomendacion "Reposo, hidratacion y posibles broncodilatadores"))))
+    (assert (diagnostico (enfermedad "Bronquitis") (certeza 80) (recomendacion "Reposo, hidratación y posibles broncodilatadores"))))
 """)
 
 env.build("""
 (defrule detectar_resfriado_comun
-    (sintoma (nombre congestion_nasal))
-    (sintoma (nombre estornudos))
-    (sintoma (nombre dolor_de_garganta))
+    (or (sintoma (nombre congestion_nasal))
+        (sintoma (nombre nariz_tapada))
+        (sintoma (nombre rinorrea)))
+    (or (sintoma (nombre estornudos))
+        (sintoma (nombre estornudar)))
+    (or (sintoma (nombre dolor_de_garganta))
+        (sintoma (nombre irritacion_de_garganta))
+        (sintoma (nombre faringitis)))
+    (or (sintoma (nombre secrecion_nasal))
+        (sintoma (nombre goteo_nasal))
+        (sintoma (nombre moco)))
     (not (sintoma (nombre fiebre_alta)))
+    (not (sintoma (nombre dificultad_para_respirar)))
     =>
-    (assert (diagnostico (enfermedad "Resfriado_Comun") (certeza 70) (recomendacion "Descanso, hidratacion y remedios sintomaticos, uso de medicame"))))
+    (assert (diagnostico (enfermedad "Resfriado_Comun") (certeza 85) (recomendacion "Descanso, hidratación y medicamentos para aliviar síntomas"))))
 """)
 
 env.build("""
 (defrule detectar_ataque_asma
-    (sintoma (nombre dificultad_para_respirar))
-    (sintoma (nombre tos_seca))
+    (or (sintoma (nombre dificultad_para_respirar))
+        (sintoma (nombre falta_de_aire))
+        (sintoma (nombre disnea))
+        (sintoma (nombre ahogo)))
+    (or (sintoma (nombre tos_seca))
+        (sintoma (nombre tos_persistente))
+        (sintoma (nombre tos_improductiva)))
     (historial (condicion "asma"))
     =>
-    (assert (diagnostico (enfermedad "Ataque_Asma") (certeza 85) (recomendacion "Uso de inhalador de rescate y consulta medica"))))
+    (assert (diagnostico (enfermedad "Ataque_Asma") (certeza 95) (recomendacion "Uso inmediato de inhalador de rescate y consulta médica urgente"))))
+""")
+    
+env.build("""
+(defrule detectar_ataque_asma_sin_historial
+    (or (sintoma (nombre dificultad_para_respirar))
+        (sintoma (nombre falta_de_aire))
+        (sintoma (nombre disnea))
+        (sintoma (nombre ahogo)))
+    (or (sintoma (nombre tos_seca))
+        (sintoma (nombre tos_persistente))
+        (sintoma (nombre tos_improductiva)))
+    (not (historial (condicion "asma")))
+    =>
+    (assert (diagnostico (enfermedad "Posible_Ataque_Asma") (certeza 70) (recomendacion "Buscar atención médica urgente para evaluación respiratoria"))))
 """)
 
 env.build("""
 (defrule detectar_sinusitis
-    (sintoma (nombre congestion_nasal))
-    (sintoma (nombre dolor_de_cabeza))
-    (sintoma (nombre secrecion_nasal))
+    (or (sintoma (nombre congestion_nasal))
+        (sintoma (nombre nariz_tapada))
+        (sintoma (nombre obstruccion_nasal)))
+    (or (sintoma (nombre dolor_de_cabeza))
+        (sintoma (nombre cefalea))
+        (sintoma (nombre migrania)))
+    (or (sintoma (nombre secrecion_nasal))
+        (sintoma (nombre goteo_nasal))
+        (sintoma (nombre rinorrea))
+        (sintoma (nombre moco)))
     =>
-    (assert (diagnostico (enfermedad "Sinusitis") (certeza 75) (recomendacion "Descongestionantes, analgésicos y posible consulta médica"))))
+    (assert (diagnostico (enfermedad "Sinusitis") (certeza 85) (recomendacion "Descongestionantes, analgésicos y consulta médica si persiste más de 7 días"))))
 """)
 
 env.build("""
@@ -129,19 +225,32 @@ env.build("""
     =>
     (assert (riesgo (factor "edad") (nivel "alto"))))
 """)
-
+    
 env.build("""
 (defrule evaluar_riesgo_historial
-    (historial (condicion "asma"))
+    (or (historial (condicion "asma"))
+        (historial (condicion "enfermedad_respiratoria_cronica")))
     =>
-    (assert (riesgo (factor "asma") (nivel "medio"))))
+    (assert (riesgo (factor "respiratorio") (nivel "alto"))))
 """)
 
 env.build("""
-(defrule recomendaciones_prevencion
-    (riesgo (factor "edad") (nivel "alto"))
+(defrule evaluar_riesgo_comorbilidades
+    (or (historial (condicion "diabetes"))
+        (historial (condicion "hipertension"))
+        (historial (condicion "obesidad"))
+        (historial (condicion "enfermedad_cardiaca")))
     =>
-    (assert (diagnostico (enfermedad "Riesgo_alto_enfermedades_respiratorias") (certeza 100) (recomendacion "Vacunacion y evitar aglomeraciones"))))
+    (assert (riesgo (factor "comorbilidades") (nivel "alto"))))
+""")
+
+env.build("""
+(defrule recomendaciones_prevencion_alto_riesgo
+    (or (riesgo (factor "edad") (nivel "alto"))
+        (riesgo (factor "respiratorio") (nivel "alto"))
+        (riesgo (factor "comorbilidades") (nivel "alto")))
+    =>
+    (assert (diagnostico (enfermedad "Riesgo_alto_enfermedades_respiratorias") (certeza 100) (recomendacion "Vacunación completa, evitar aglomeraciones y uso de mascarilla en espacios cerrados"))))
 """)
 
 def es_negacion(texto, sintoma):
@@ -239,11 +348,24 @@ def backward_chaining(enfermedad_objetivo):
           "Riesgo_alto_enfermedades_respiratorias": []  # Este depende de factores de riesgo, no síntomas
      }
      
+     # Importancia relativa de cada síntoma (ponderación) para cada enfermedad
+     ponderacion_sintomas = {
+          "COVID19": {"fiebre_alta": 0.4, "tos_seca": 0.3, "dificultad_para_respirar": 0.3},
+          "Gripe": {"fiebre": 0.4, "dolor_muscular": 0.3, "congestion_nasal": 0.3},
+          "Neumonia": {"fiebre_alta": 0.3, "tos_con_flema": 0.3, "dolor_en_el_pecho": 0.2, "dificultad_para_respirar": 0.2},
+          "Bronquitis": {"tos_con_flema": 0.5, "fatiga": 0.3, "fiebre": 0.2},
+          "Resfriado_Comun": {"congestion_nasal": 0.4, "estornudos": 0.3, "dolor_de_garganta": 0.3},
+          "Ataque_Asma": {"dificultad_para_respirar": 0.6, "tos_seca": 0.4},
+          "Sinusitis": {"congestion_nasal": 0.4, "dolor_de_cabeza": 0.3, "secrecion_nasal": 0.3},
+     }
+     
      if enfermedad_objetivo not in requisitos_sintomas:
           return {
                "posible": False,
                "mensaje": "Enfermedad no reconocida en la base de conocimientos",
-               "sintomas_faltantes": []
+               "sintomas_faltantes": [],
+               "certeza": 0,
+               "justificacion": []
           }
      
      # Obtener síntomas actuales en los hechos
@@ -252,78 +374,167 @@ def backward_chaining(enfermedad_objetivo):
           if fact.template.name == "sintoma":
                sintomas_actuales.append(fact["nombre"])
      
-     # Comprobar si todos los síntomas necesarios están presentes
+     # Comprobar síntomas requeridos y calcular certeza parcial
      sintomas_requeridos = requisitos_sintomas[enfermedad_objetivo]
      sintomas_faltantes = [s for s in sintomas_requeridos if s not in sintomas_actuales]
+     sintomas_presentes = [s for s in sintomas_requeridos if s in sintomas_actuales]
      
+     # Determinar el nivel de certeza basado en la ponderación de los síntomas presentes
+     certeza = 0
+     justificacion = []
+     
+     if enfermedad_objetivo in ponderacion_sintomas:
+          pesos = ponderacion_sintomas[enfermedad_objetivo]
+          for sintoma in sintomas_presentes:
+               if sintoma in pesos:
+                    peso = pesos[sintoma]
+                    certeza += peso * 100
+                    justificacion.append(f"Síntoma '{sintoma}' contribuye con {peso*100:.0f}% de certeza")
+     
+     # Si hay síntomas faltantes, explicar qué se necesitaría para confirmar
+     explicacion_faltantes = []
+     if sintomas_faltantes and enfermedad_objetivo in ponderacion_sintomas:
+          for sintoma in sintomas_faltantes:
+               if sintoma in ponderacion_sintomas[enfermedad_objetivo]:
+                    peso = ponderacion_sintomas[enfermedad_objetivo][sintoma]
+                    explicacion_faltantes.append(f"El síntoma '{sintoma}' aumentaría la certeza en {peso*100:.0f}%")
+     
+     # Determinar condiciones especiales que pueden influir en el diagnóstico
+     condiciones_especiales = []
+     historial_actual = []
+     for fact in env.facts():
+          if fact.template.name == "historial":
+               historial_actual.append(fact["condicion"])
+               
+     if enfermedad_objetivo == "Ataque_Asma" and "asma" in historial_actual:
+          certeza += 20
+          condiciones_especiales.append("Historial de asma aumenta la probabilidad (+20%)")
+     
+     # Agregar explicación al diagnóstico
      return {
-          "posible": len(sintomas_faltantes) == 0,
-          "mensaje": "Diagnóstico posible" if len(sintomas_faltantes) == 0 else "Faltan síntomas para confirmar",
-          "sintomas_faltantes": sintomas_faltantes
+          "posible": certeza > 70,  # Se considera posible si la certeza supera el 70%
+          "mensaje": "Diagnóstico posible" if certeza > 70 else "Certeza insuficiente para confirmar",
+          "sintomas_faltantes": sintomas_faltantes,
+          "explicaciones_faltantes": explicacion_faltantes,
+          "certeza": min(certeza, 100),  # Asegurar que no supere el 100%
+          "justificacion": justificacion + condiciones_especiales
      }
 
+def forward_chaining_trace(sintomas, edad, historial):
+     """Realiza encadenamiento hacia adelante con trazabilidad del razonamiento"""
+     env.reset()
+     
+     # Rastrear hechos iniciales
+     trace = {
+          "hechos_iniciales": {
+               "sintomas": sintomas,
+               "edad": edad,
+               "historial": historial
+          },
+          "pasos_inferencia": [],
+          "diagnosticos": []
+     }
+     
+     # Assert facts
+     for sintoma in sintomas:
+          env.assert_string(f'(sintoma (nombre {sintoma}))')
+          trace["pasos_inferencia"].append(f"Afirmado síntoma: {sintoma}")
+     
+     env.assert_string(f'(edad (valor {edad}))')
+     trace["pasos_inferencia"].append(f"Afirmada edad: {edad}")
+     
+     for condicion in historial:
+          env.assert_string(f'(historial (condicion {condicion.replace(" ", "_")}))')
+          trace["pasos_inferencia"].append(f"Afirmada condición: {condicion}")
+     
+     # Track rules fired
+     prev_fact_count = len(list(env.facts()))
+     
+     env.run()
+     
+     # Track new facts generated
+     curr_facts = list(env.facts())
+     new_facts = curr_facts[prev_fact_count:]
+     
+     for fact in curr_facts:
+          if fact.template.name == "diagnostico":
+               trace["diagnosticos"].append({
+                    "enfermedad": fact["enfermedad"],
+                    "certeza": fact["certeza"],
+                    "recomendacion": fact["recomendacion"]
+               })
+               trace["pasos_inferencia"].append(f"Generado diagnóstico: {fact['enfermedad']} con certeza {fact['certeza']}%")
+          elif fact.template.name == "riesgo":
+               trace["pasos_inferencia"].append(f"Identificado riesgo: {fact['factor']} nivel {fact['nivel']}")
+     
+     return trace
+
 def explicar_diagnostico(enfermedad):
-    """
-    Explica cómo se llegó a un diagnóstico específico, mostrando las reglas involucradas.
-    """
-    explicaciones = {
-        "COVID19": "El diagnóstico de COVID-19 se basa en la presencia de fiebre alta, tos seca, y dificultad para respirar.",
-        "Gripe": "El diagnóstico de gripe se basa en la presencia de fiebre, dolor muscular, y congestión nasal.",
-        "Neumonia": "El diagnóstico de neumonía se basa en la presencia de fiebre alta, tos con flema, dolor en el pecho y dificultad para respirar.",
-        "Bronquitis": "El diagnóstico de bronquitis se basa en la presencia de tos con flema, fatiga y fiebre.",
-        "Resfriado_Comun": "El diagnóstico de resfriado común se basa en la presencia de congestión nasal, estornudos y dolor de garganta.",
-        "Ataque_Asma": "El diagnóstico de ataque de asma se basa en la presencia de dificultad para respirar y tos seca, especialmente en pacientes con historial de asma.",
-        "Sinusitis": "El diagnóstico de sinusitis se basa en la presencia de congestión nasal, dolor de cabeza y secreción nasal.",
-        "Riesgo_alto_enfermedades_respiratorias": "Este aviso se genera cuando hay un factor de riesgo alto, como la edad avanzada o condiciones preexistentes."
-    }
-    
-    return explicaciones.get(enfermedad, "No hay explicación disponible para esta condición.")
+     """Proporciona una explicación detallada para un diagnóstico específico"""
+     explicaciones = {
+          "COVID19": "Enfermedad viral altamente contagiosa causada por el coronavirus SARS-CoV-2, que afecta principalmente al sistema respiratorio.",
+          "Gripe": "Infección viral respiratoria causada por el virus influenza, caracterizada por fiebre, dolor muscular y congestión.",
+          "Neumonia": "Infección que inflama los sacos aéreos en uno o ambos pulmones, causada por bacterias, virus u hongos.",
+          "Bronquitis": "Inflamación de los bronquios, los conductos de aire que conectan la tráquea con los pulmones.",
+          "Resfriado_Comun": "Infección viral leve del tracto respiratorio superior que afecta la nariz y garganta.",
+          "Ataque_Asma": "Episodio agudo de obstrucción de las vías respiratorias debido a la inflamación y estrechamiento de las mismas.",
+          "Sinusitis": "Inflamación de los senos paranasales, cavidades llenas de aire en el cráneo, generalmente debido a una infección.",
+          "Riesgo_alto_enfermedades_respiratorias": "Factores identificados que aumentan la probabilidad de desarrollar o complicar enfermedades respiratorias."
+     }
+     
+     if enfermedad in explicaciones:
+          return explicaciones[enfermedad]
+     return f"No hay explicación detallada disponible para {enfermedad}"
 
 def diagnosticar_completo(texto, edad, historial, enfermedad_objetivo=None):
-    """Integra encadenamiento hacia adelante y hacia atrás"""
-    env.reset()
-    
-    # Procesar texto para extraer síntomas (encadenamiento hacia adelante)
-    sintomas = extraer_sintomas(texto)
-    print(f"\nSíntomas detectados: {sintomas}")
-    
-    for sintoma in sintomas:
-        env.assert_string(f'(sintoma (nombre {sintoma}))')
-    
-    env.assert_string(f'(edad (valor {edad}))')
-    
-    for condicion in historial:
-        env.assert_string(f'(historial (condicion {condicion.replace(" ", "_")}))')
-    
-    # Si hay una enfermedad objetivo, usar encadenamiento hacia atrás primero
-    if enfermedad_objetivo:
-        resultado_backward = backward_chaining(enfermedad_objetivo)
-        if resultado_backward["posible"]:
-            print(f"\nAnálisis específico para {enfermedad_objetivo}:")
-            print(f"✓ {resultado_backward['mensaje']}")
-            print(f"✓ {explicar_diagnostico(enfermedad_objetivo)}")
-        else:
-            print(f"\nAnálisis específico para {enfermedad_objetivo}:")
-            print(f"✗ {resultado_backward['mensaje']}")
-            if resultado_backward['sintomas_faltantes']:
-                print(f"Síntomas faltantes: {', '.join(resultado_backward['sintomas_faltantes'])}")
-    
-    # Ejecutar motor de inferencia (encadenamiento hacia adelante)
-    env.run()
-    
-    # Recopilar diagnósticos generados
-    diagnosticos = []
-    for fact in env.facts():
-        print (fact)
-        if fact.template.name == "diagnostico":
-            diagnosticos.append({
-                "enfermedad": fact["enfermedad"], 
-                "certeza": fact["certeza"], 
-                "recomendacion": fact["recomendacion"],
-                "explicacion": explicar_diagnostico(fact["enfermedad"])
-            })
-    
-    return diagnosticos
+     """Integra encadenamiento hacia adelante y hacia atrás con explicaciones detalladas"""
+     env.reset()
+     
+     # Procesar texto para extraer síntomas
+     sintomas = extraer_sintomas(texto)
+     print(f"\nSíntomas detectados: {sintomas}")
+     
+     # Realizar forward chaining con trazabilidad
+     forward_trace = forward_chaining_trace(sintomas, edad, historial)
+     
+     resultados = {
+          "sintomas_detectados": sintomas,
+          "forward_chaining": forward_trace,
+          "diagnosticos": []
+     }
+     
+     # Si hay una enfermedad objetivo, usar encadenamiento hacia atrás
+     if enfermedad_objetivo and enfermedad_objetivo != "ninguna":
+          resultado_backward = backward_chaining(enfermedad_objetivo)
+          resultados["backward_chaining"] = resultado_backward
+          
+          print(f"\nAnálisis específico para {enfermedad_objetivo}:")
+          if resultado_backward["posible"]:
+               print(f"✓ {resultado_backward['mensaje']} (Certeza: {resultado_backward['certeza']:.1f}%)")
+               print(f"✓ {explicar_diagnostico(enfermedad_objetivo)}")
+               for justif in resultado_backward["justificacion"]:
+                    print(f"  - {justif}")
+          else:
+               print(f"✗ {resultado_backward['mensaje']}")
+               if resultado_backward['sintomas_faltantes']:
+                    print(f"Síntomas faltantes: {', '.join(resultado_backward['sintomas_faltantes'])}")
+                    for expl in resultado_backward.get("explicaciones_faltantes", []):
+                         print(f"  - {expl}")
+     
+     # Recopilar diagnósticos generados por forward chaining
+     diagnosticos = []
+     for diag in forward_trace["diagnosticos"]:
+          diagnosticos.append({
+               "enfermedad": diag["enfermedad"], 
+               "certeza": diag["certeza"], 
+               "recomendacion": diag["recomendacion"],
+               "explicacion": explicar_diagnostico(diag["enfermedad"]),
+               "razonamiento": [paso for paso in forward_trace["pasos_inferencia"] 
+                              if diag["enfermedad"] in paso or "síntoma" in paso]
+          })
+     
+     resultados["diagnosticos"] = diagnosticos
+     return diagnosticos
 
 #################################################
 # PARTE 3: INTERFAZ GRÁFICA CON TKINTER
@@ -417,6 +628,10 @@ class DiagnosticoApp:
             "COVID19": "COVID-19",
             "Gripe": "Gripe",
             "Neumonia": "Neumonía",
+            "Bronquitis": "Bronquitis",
+            "Resfriado_Comun": "Resfriado Común",
+            "Ataque_Asma": "Ataque de Asma",
+            "Sinusitis": "Sinusitis",
             "Riesgo_alto_enfermedades_respiratorias": "Riesgo alto enfermedades respiratorias"
         }
         
