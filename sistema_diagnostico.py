@@ -336,8 +336,36 @@ class DiagnosticoApp:
         self.root.geometry("800x700")
         self.root.configure(bg="#f0f0f0")
         
+        # Crear frame con scrollbar
+        self.container = ttk.Frame(root)
+        self.container.pack(fill=tk.BOTH, expand=True)
+        
+        # Crear canvas con scrollbar vertical
+        self.canvas = tk.Canvas(self.container, bg="#f0f0f0")
+        self.scrollbar = ttk.Scrollbar(self.container, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = ttk.Frame(self.canvas)
+        
+        # Configurar el scrollable frame
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            )
+        )
+        
+        # Añadir el frame al canvas
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        
+        # Colocar canvas y scrollbar
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+        
+        # Configurar scrolling con rueda del ratón
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        
         # Crear contenedor principal
-        main_frame = ttk.Frame(root, padding="10")
+        main_frame = ttk.Frame(self.scrollable_frame, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Título
@@ -409,6 +437,10 @@ class DiagnosticoApp:
         
         self.resultado_text = scrolledtext.ScrolledText(result_frame, height=20, wrap=tk.WORD)
         self.resultado_text.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+    
+    def _on_mousewheel(self, event):
+        """Maneja el evento de desplazamiento con la rueda del ratón"""
+        self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
     
     def limpiar_campos(self):
         """Limpia todos los campos del formulario"""
