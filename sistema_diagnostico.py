@@ -21,26 +21,26 @@ sinonimos_sintomas = {
     "fiebre": ["temperatura", "calentura"],
     "tos seca": ["tos persistente", "tos irritativa", "tos improductiva", "tos sin flema"],
     "dolor de cabeza": ["cefalea", "migraña", "jaqueca", "dolor craneal"],
-    "congestión nasal": ["nariz tapada", "obstrucción nasal", "rinorrea"],
-    "dificultad para respirar": ["falta de aire", "disnea", "ahogo", "respiración dificultosa"],
-    "dolor muscular": ["mialgia", "cuerpo cortado", "dolores musculares", "dolor en músculos"],
+    "congestion nasal": ["nariz tapada", "obstrucción nasal", "rinorrea"],
+    "dificultad para respirar": ["falta de aire", "disnea", "ahogo", "respiracion dificultosa"],
+    "dolor muscular": ["mialgia", "cuerpo cortado", "dolores musculares", "dolor en musculos"],
     "estornudos": ["estornudar", "estornudo frecuente"],
-    "mareo": ["vértigo", "aturdimiento", "desequilibrio"],
-    "dolor abdominal": ["malestar estomacal", "dolor de estómago", "molestia abdominal"],
-    "dolor de garganta": ["irritación de garganta", "faringitis", "molestia en la garganta"],
+    "mareo": ["vertigo", "aturdimiento", "desequilibrio"],
+    "dolor abdominal": ["malestar estomacal", "dolor de estomago", "molestia abdominal"],
+    "dolor de garganta": ["irritacion de garganta", "faringitis", "molestia en la garganta"],
     "fatiga": ["cansancio", "debilidad", "agotamiento"],
-    "pérdida de olfato": ["anosmia", "sin olfato", "no huele"],
-    "pérdida de gusto": ["ageusia", "sin sabor", "no saborea"],
-    "diarrea": ["heces sueltas", "deposiciones líquidas", "evacuaciones frecuentes"],
-    "náusea": ["náuseas", "ganas de vomitar", "malestar estomacal", "asco"],
-    "vómitos": ["vomitar", "devolver", "expulsar alimentos"],
-    "dolor en el pecho": ["dolor torácico", "presión en el pecho", "molestia pectoral"],
-    "erupción cutánea": ["sarpullido", "rash", "exantema", "erupciones en la piel"],
+    "perdida de olfato": ["anosmia", "sin olfato", "no huele"],
+    "perdida de gusto": ["ageusia", "sin sabor", "no saborea"],
+    "diarrea": ["heces sueltas", "deposiciones liquidas", "evacuaciones frecuentes"],
+    "nausea": ["nauseas", "ganas de vomitar", "malestar estomacal", "asco"],
+    "vomitos": ["vomitar", "devolver", "expulsar alimentos"],
+    "dolor en el pecho": ["dolor toracico", "presion en el pecho", "molestia pectoral"],
+    "erupcion cutanea": ["sarpullido", "rash", "exantema", "erupciones en la piel"],
     "dolor articular": ["artralgia", "dolor en las articulaciones", "rigidez articular"],
-    "glándulas inflamadas": ["ganglios inflamados", "adenopatía", "inflamación ganglionar"],
-    "escalofríos": ["tiritona", "temblores por frío", "estremecimiento"],
-    "tos con flema": ["tos productiva", "tos con mucosidad", "expectoración"],
-    "secreción nasal": ["goteo nasal", "rinorrea", "moco"],
+    "glandulas inflamadas": ["ganglios inflamados", "adenopatia", "inflamacion ganglionar"],
+    "escalofrios": ["tiritona", "temblores por frio", "estremecimiento"],
+    "tos con flema": ["tos productiva", "tos con mucosidad", "expectoracion"],
+    "secrecion nasal": ["goteo nasal", "rinorrea", "moco"],
 }
 
 # Frases negativas que indican ausencia de síntomas
@@ -75,7 +75,7 @@ env.build("""
 """)
 
 env.build("""
-(defrule detectar_covid_parcial
+(defrule detectar_covid_parcial 
     (or (sintoma (nombre fiebre_alta))
         (sintoma (nombre temperatura_elevada))
         (sintoma (nombre hipertermia)))
